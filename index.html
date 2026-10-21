@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>uDriver · Chofer designado</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b0f1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="uDriver">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2300e5a0'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle' font-family='Arial' font-weight='900' fill='%230b0f1a'%3Eu%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0b0f1a; --bg2:#121829; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.1);
+  --txt:#eef2ff; --mut:#93a0c0; --acc:#00e5a0; --acc2:#7c5cff; --warn:#ffb020; --bad:#ff5c7a;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;overscroll-behavior:none}
+body::before{content:"";position:fixed;inset:0;background:
+  radial-gradient(600px 400px at 10% -10%,rgba(124,92,255,.35),transparent 60%),
+  radial-gradient(500px 400px at 110% 10%,rgba(0,229,160,.22),transparent 60%);pointer-events:none}
+#app{position:fixed;inset:0;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:transparent}
+@media(min-width:520px){#app{inset:16px auto 16px 50%;transform:translateX(-50%);width:430px;border-radius:36px;border:1px solid var(--line);box-shadow:0 30px 80px #000a;overflow:hidden;background:var(--bg)}}
+header{padding:calc(var(--safe-t) + 12px) 16px 10px;display:flex;align-items:center;gap:10px;z-index:5}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--acc),#00b4d8);display:grid;place-items:center;font-weight:900;color:#06201a;font-size:20px;box-shadow:0 6px 20px rgba(0,229,160,.4)}
+header h1{font-size:18px;letter-spacing:.3px}
+header h1 span{color:var(--acc)}
+header small{display:block;color:var(--mut);font-size:11px;margin-top:1px}
+.sp{flex:1}
+.ibtn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--txt);display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(10px);transition:.2s}
+.ibtn:active{transform:scale(.92)}
+.ibtn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+main{flex:1;position:relative;overflow:hidden}
+.tab{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 110px;opacity:0;pointer-events:none;transform:translateY(14px);transition:.35s}
+.tab.on{opacity:1;pointer-events:auto;transform:none}
+.tab.map{padding:0}
+nav{position:relative;z-index:6;display:flex;gap:6px;padding:8px 12px calc(var(--safe-b) + 10px);background:linear-gradient(transparent,var(--bg) 40%)}
+nav button{flex:1;border:0;background:transparent;color:var(--mut);padding:8px 0;border-radius:16px;font:600 11px inherit;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:.25s}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--acc);background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+/* map */
+.mapwrap{position:absolute;inset:0}
+.mapwrap svg{width:100%;height:100%;display:block}
+.sheet{position:absolute;left:10px;right:10px;bottom:6px;background:rgba(18,24,41,.88);backdrop-filter:blur(22px);border:1px solid var(--line);border-radius:28px;padding:18px;box-shadow:0 -10px 50px #0008;animation:up .45s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet h2{font-size:18px;margin-bottom:4px}
+.sheet p.s{color:var(--mut);font-size:13px;margin-bottom:12px}
+.row{display:flex;align-items:center;gap:10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:9px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:600 13px inherit;font-family:inherit;cursor:pointer;transition:.2s}
+.chip.on{background:linear-gradient(135deg,var(--acc),#00b4d8);color:#06201a;border-color:transparent;box-shadow:0 6px 18px rgba(0,229,160,.35)}
+input[type=range]{width:100%;accent-color:var(--acc);height:32px}
+.price{display:flex;align-items:baseline;gap:8px;margin:2px 0 10px}
+.price b{font-size:38px;letter-spacing:-1px}
+.price span{color:var(--mut);font-size:13px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.mini{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+.mini small{color:var(--mut);font-size:11px;display:block}
+.mini b{font-size:16px}
+.btn{width:100%;border:0;border-radius:18px;padding:16px;font:800 16px inherit;font-family:inherit;color:#06201a;background:linear-gradient(135deg,var(--acc),#00c2ff);cursor:pointer;box-shadow:0 10px 30px rgba(0,229,160,.35);transition:.2s;position:relative;overflow:hidden}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--card);color:var(--txt);box-shadow:none;border:1px solid var(--line)}
+.driver{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.avatar{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,var(--acc2),#ff6ec7);display:grid;place-items:center;font-size:26px}
+.driver b{display:block;font-size:16px}
+.driver small{color:var(--mut)}
+.pin{display:flex;gap:8px;justify-content:center;margin:8px 0 14px}
+.pin i{font-style:normal;width:46px;height:56px;border-radius:14px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font:800 26px inherit;font-family:inherit;color:var(--acc)}
+.bar{height:8px;background:var(--card);border-radius:8px;overflow:hidden;margin:6px 0 12px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),#00c2ff);border-radius:8px;transition:width .2s}
+.radar{width:120px;height:120px;margin:6px auto 10px;position:relative}
+.radar i{position:absolute;inset:0;border-radius:50%;border:2px solid var(--acc);opacity:0;animation:rad 2s infinite}
+.radar i:nth-child(2){animation-delay:.6s}.radar i:nth-child(3){animation-delay:1.2s}
+.radar b{position:absolute;inset:40px;border-radius:50%;background:var(--acc);box-shadow:0 0 30px var(--acc)}
+@keyframes rad{from{transform:scale(.3);opacity:.9}to{transform:scale(1.2);opacity:0}}
+.stars{display:flex;justify-content:center;gap:6px;font-size:32px;margin:6px 0 14px}
+.stars span{cursor:pointer;filter:grayscale(1) opacity(.4);transition:.2s}
+.stars span.on{filter:none;transform:scale(1.12)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:rgba(0,229,160,.14);color:var(--acc);font-size:12px;font-weight:700}
+.pill.w{background:rgba(255,176,32,.15);color:var(--warn)}
+/* cards / pages */
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:12px;backdrop-filter:blur(8px)}
+.card h3{font-size:15px;margin-bottom:8px}
+.card p,.card li{color:#c3cce6;font-size:13.5px;line-height:1.5}
+.card ul{padding-left:18px}
+.hero{padding:22px 18px;border-radius:26px;margin-bottom:14px;background:linear-gradient(135deg,rgba(124,92,255,.5),rgba(0,229,160,.28));border:1px solid var(--line);position:relative;overflow:hidden}
+.hero h2{font-size:24px;line-height:1.15;margin-bottom:6px}
+.hero p{color:#dfe6ff;font-size:13.5px}
+.hero::after{content:"🚗";position:absolute;right:-6px;bottom:-14px;font-size:84px;opacity:.25}
+.big{font-size:40px;font-weight:900;letter-spacing:-1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px}
+.kpi small{color:var(--mut);font-size:11px;display:block;margin-bottom:4px}
+.kpi b{font-size:20px}
+.sw{position:relative;width:62px;height:34px;border-radius:20px;background:#2a3350;cursor:pointer;transition:.3s;flex:none}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:#fff;transition:.3s}
+.sw.on{background:var(--acc)}.sw.on::after{left:32px}
+.req{border:1px solid rgba(0,229,160,.4);background:linear-gradient(135deg,rgba(0,229,160,.12),rgba(124,92,255,.12));border-radius:22px;padding:16px;margin-bottom:12px;animation:up .4s}
+.sub{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.sub::-webkit-scrollbar{display:none}
+.sec{display:none}.sec.on{display:block;animation:up .35s}
+.foda{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.foda .card{margin:0}
+.foda .f{border-color:rgba(0,229,160,.4)}.foda .o{border-color:rgba(0,194,255,.4)}.foda .d{border-color:rgba(255,176,32,.4)}.foda .a{border-color:rgba(255,92,122,.4)}
+.foda h3{font-size:13px}
+.foda li{font-size:12px}
+.cost{margin-bottom:12px}
+.cost .t{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.cost .t span{color:var(--mut)}
+.gantt{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:4px;font-size:11px;align-items:center}
+.gantt .h{color:var(--mut);text-align:center;font-weight:700}
+.gantt .n{padding:6px 0;color:#c3cce6;line-height:1.25}
+.gantt .c{height:22px;border-radius:7px;background:rgba(255,255,255,.04)}
+.gantt .c.x{background:linear-gradient(90deg,var(--acc),#00c2ff)}
+.gantt .c.y{background:linear-gradient(90deg,var(--acc2),#ff6ec7)}
+.quad{display:grid;gap:8px}
+.q{border-radius:18px;padding:14px;color:#fff}
+.q h4{font-size:14px;margin-bottom:6px}.q li{font-size:12.5px;color:#fff;opacity:.92}.q ul{padding-left:16px}
+.q1{background:linear-gradient(135deg,#0fa968,#1ec776)}.q2{background:linear-gradient(135deg,#17306a,#1f4a9e)}.q3{background:linear-gradient(135deg,#6d4fa8,#8d6cc4)}.q4{background:linear-gradient(135deg,#3f78c4,#6aa0e0)}
+.val{display:flex;gap:12px;margin-bottom:10px}
+.val .ic{font-size:24px}
+.val b{display:block;font-size:14px}
+.val p{font-size:12.5px;color:#c3cce6;line-height:1.4}
+.team{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+/* splash + toast */
+#splash{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;transition:opacity .6s,visibility .6s}
+#splash.hide{opacity:0;visibility:hidden}
+#splash .l{text-align:center}
+#splash .logo{width:92px;height:92px;border-radius:28px;font-size:56px;margin:0 auto 16px;animation:pop 1s cubic-bezier(.2,1.4,.4,1)}
+#splash h1{font-size:34px;letter-spacing:-1px}#splash h1 span{color:var(--acc)}
+#splash p{color:var(--mut);margin-top:6px;font-size:14px}
+@keyframes pop{from{transform:scale(.2) rotate(-30deg);opacity:0}to{transform:none;opacity:1}}
+#toast{position:fixed;left:50%;top:calc(var(--safe-t) + 66px);transform:translate(-50%,-30px);background:#1b2340;border:1px solid var(--line);padding:12px 16px;border-radius:16px;font-size:13px;z-index:40;opacity:0;transition:.4s;max-width:88%;text-align:center;box-shadow:0 10px 40px #000a}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.route{stroke-dasharray:9 9;animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-36}}
+.pulse{animation:pls 1.6s infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pls{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.2);opacity:0}}
+</style>
+</head>
+<body>
+<div id="splash"><div class="l"><div class="logo">u</div><h1>u<span>Driver</span></h1><p>Tu auto llega a casa. Tú también.</p></div></div>
+<div id="toast"></div>
+
+<div id="app">
+<header>
+  <div class="logo">u</div>
+  <div><h1>u<span>Driver</span></h1><small>Chofer designado · Aguascalientes</small></div>
+  <div class="sp"></div>
+  <button class="ibtn" id="fsBtn" aria-label="Pantalla completa">
+    <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+  </button>
+</header>
+
+<main>
+  <!-- VIAJE (cliente) -->
+  <section class="tab map on" id="t-viaje">
+    <div class="mapwrap">
+      <svg viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice" id="map">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#00e5a0"/><stop offset="1" stop-color="#00c2ff"/></linearGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <rect width="400" height="520" fill="#0d1322"/>
+        <path d="M-10 120 C 80 100 140 160 230 150 S 360 120 420 150 L420 190 C 340 170 260 200 200 195 S 60 150 -10 165Z" fill="#12304a" opacity=".7"/>
+        <rect x="250" y="270" width="110" height="80" rx="18" fill="#10301f" opacity=".8"/>
+        <rect x="30" y="330" width="90" height="70" rx="18" fill="#10301f" opacity=".8"/>
+        <g stroke="#1c2745" stroke-width="10" stroke-linecap="round">
+          <path d="M0 60H400M0 230H400M0 300H400M0 380H400M0 470H400"/><path d="M40 0V520M130 0V520M210 0V520M290 0V520M370 0V520"/>
+        </g>
+        <g stroke="#26335a" stroke-width="2" stroke-dasharray="6 8">
+          <path d="M0 60H400M0 230H400M0 300H400M0 380H400M0 470H400"/><path d="M40 0V520M130 0V520M210 0V520M290 0V520M370 0V520"/>
+        </g>
+        <path id="pRoute" d="M70 420 C 120 330, 90 280, 170 250 S 300 200, 330 90" fill="none" stroke="url(#g1)" stroke-width="5" stroke-linecap="round" class="route" filter="url(#glow)" opacity="0"/>
+        <path id="pPick" d="M350 480 C 250 480, 150 450, 70 420" fill="none" stroke="#7c5cff" stroke-width="4" stroke-linecap="round" class="route" opacity="0"/>
+        <g id="pinA"><circle cx="70" cy="420" r="9" fill="#00e5a0" class="pulse"/><circle cx="70" cy="420" r="7" fill="#00e5a0" stroke="#06201a" stroke-width="3"/><text x="84" y="414" fill="#cfe" font-size="11" font-weight="700">Tu auto</text></g>
+        <g id="pinB" opacity="0"><circle cx="330" cy="90" r="9" fill="#ff5c7a" class="pulse"/><circle cx="330" cy="90" r="7" fill="#ff5c7a" stroke="#2a0710" stroke-width="3"/><text id="bLabel" x="256" y="80" fill="#fde" font-size="11" font-weight="700">Destino</text></g>
+        <g id="car" opacity="0"><circle r="16" fill="#7c5cff" opacity=".35"/><circle r="11" fill="#fff"/><text y="5" text-anchor="middle" font-size="14">🚗</text></g>
+      </svg>
+    </div>
+    <div id="sheet" class="sheet"></div>
+  </section>
+
+  <!-- CHOFER -->
+  <section class="tab" id="t-chofer">
+    <div class="hero"><h2>Modo chofer</h2><p>Gana $10 MXN por km. Sin autos, sin inversión: solo tu licencia y tu celular.</p></div>
+    <div class="card row">
+      <div style="flex:1"><h3 id="onTitle" style="margin:0">Desconectado</h3><p id="onSub">Actívate para recibir servicios</p></div>
+      <div class="sw" id="sw"></div>
+    </div>
+    <div id="reqBox"></div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="kpi"><small>Ganancia de hoy</small><b id="kEarn">$0.00</b></div>
+      <div class="kpi"><small>Servicios</small><b id="kRides">0</b></div>
+      <div class="kpi"><small>Km recorridos</small><b id="kKm">0</b></div>
+      <div class="kpi"><small>Calificación</small><b>4.9 ⭐</b></div>
+    </div>
+    <div class="card"><h3>🛡️ Verificado</h3><p>Antecedentes, licencia e identidad validados (KYC) antes de recibir tu primer viaje. La confianza es el pilar del servicio.</p></div>
+  </section>
+
+  <!-- PROYECTO -->
+  <section class="tab" id="t-proyecto">
+    <div class="hero"><h2>Plataforma de chofer designado</h2><p>Desarrollo de Emprendedores · ITIC · AGO–DIC 2026</p>
+      <div class="team"><span class="pill">Álvaro Gallegos</span><span class="pill">Ángel Martínez</span><span class="pill">Ángel Castillo</span></div></div>
+    <div class="sub" id="sub">
+      <button class="chip on" data-s="foda">FODA</button>
+      <button class="chip" data-s="costos">Costos</button>
+      <button class="chip" data-s="ingreso">Ingresos</button>
+      <button class="chip" data-s="flujo">Flujo $</button>
+      <button class="chip" data-s="gantt">Gantt</button>
+      <button class="chip" data-s="mvv">Misión</button>
+    </div>
+
+    <div class="sec on" id="s-foda">
+      <div class="foda">
+        <div class="card f"><h3>💪 Fortalezas</h3><ul><li>Bajo capital operativo: el activo lo pone el usuario</li><li>Capacidad tecnológica interna</li><li>Experiencia operativa directa</li></ul></div>
+        <div class="card o"><h3>🚀 Oportunidades</h3><ul><li>Operativos de alcoholímetro</li><li>Alianzas B2B (bares, salones)</li><li>Nicho premium</li><li>Micro-servicios diurnos</li></ul></div>
+        <div class="card d"><h3>⚠️ Debilidades</h3><ul><li>Logística de última milla</li><li>Barrera de confianza inicial</li><li>Eficiencia de enrutamiento</li></ul></div>
+        <div class="card a"><h3>🔥 Amenazas</h3><ul><li>Fricción con aseguradoras</li><li>Zonas grises regulatorias</li><li>Sustituto simple: pedir un Uber</li></ul></div>
+      </div>
+    </div>
+
+    <div class="sec" id="s-costos">
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="kpi"><small>Inversión mínima</small><b>$1,224 USD</b></div>
+        <div class="kpi"><small>Inversión máxima</small><b>$2,474 USD</b></div>
+      </div>
+      <div class="card"><small style="color:var(--mut)">OPEX mensual promedio</small><div class="big" style="color:var(--acc)">$492.50 <span style="font-size:14px;color:var(--mut)">USD</span></div></div>
+      <div class="card"><h3>Costos fijos iniciales (USD)</h3>
+        <div class="cost"><div class="t">Seguro de protección<span>500–1,200</span></div><div class="bar"><i data-w="100"></i></div></div>
+        <div class="cost"><div class="t">Legal y contratos<span>300–600</span></div><div class="bar"><i data-w="50"></i></div></div>
+        <div class="cost"><div class="t">Dispositivos de prueba<span>150–300</span></div><div class="bar"><i data-w="25"></i></div></div>
+        <div class="cost"><div class="t">Propiedad intelectual (IMPI)<span>150–250</span></div><div class="bar"><i data-w="21"></i></div></div>
+        <div class="cost"><div class="t">Cuentas de desarrollador<span>124</span></div><div class="bar"><i data-w="10"></i></div></div>
+      </div>
+      <div class="card"><h3>Operación mensual (USD)</h3>
+        <div class="cost"><div class="t">Marketing y captación<span>150–400</span></div><div class="bar"><i data-w="100"></i></div></div>
+        <div class="cost"><div class="t">Verificación de conductores<span>50–150</span></div><div class="bar"><i data-w="38"></i></div></div>
+        <div class="cost"><div class="t">Servidores y BBDD<span>25–70</span></div><div class="bar"><i data-w="18"></i></div></div>
+        <div class="cost"><div class="t">Mapas y geolocalización<span>50</span></div><div class="bar"><i data-w="13"></i></div></div>
+        <div class="cost"><div class="t">SMS / OTP<span>10–30</span></div><div class="bar"><i data-w="8"></i></div></div>
+        <p style="margin-top:6px">Variable: pasarela de pagos ≈ 3.5% + $0.25 USD por transacción.</p>
+      </div>
+      <div class="card"><h3>Desarrollo in-house</h3><p>La app, la web y la base de datos las construye el equipo, así que no se paga agencia externa. El presupuesto tecnológico es solo nube y APIs.</p></div>
+    </div>
+
+    <div class="sec" id="s-ingreso">
+      <div class="card"><h3>Calculadora de ingreso</h3>
+        <p style="margin-bottom:6px">Precio final = km × 10 ÷ 0.86</p>
+        <input type="range" id="cKm" min="1" max="40" value="10">
+        <div class="row" style="justify-content:space-between"><span class="pill" id="cKmL">10 km</span><span class="pill w" id="cFee">App: $16.28</span></div>
+        <div class="price" style="margin-top:12px"><b id="cPrice">$116.28</b><span>MXN al cliente</span></div>
+        <div class="split"><div class="mini"><small>Gana el chofer</small><b id="cDrv">$100.00</b></div><div class="mini"><small>Comisión (14%)</small><b id="cCom">$16.28</b></div></div>
+      </div>
+      <div class="card"><h3>Tabla de referencia</h3>
+        <div class="gantt" style="grid-template-columns:repeat(4,1fr);font-size:12px;text-align:center">
+          <div class="h">Km</div><div class="h">Chofer</div><div class="h">App</div><div class="h">Cliente</div>
+          <div class="n">5</div><div class="n">$50</div><div class="n">$8.14</div><div class="n"><b>$58.14</b></div>
+          <div class="n">10</div><div class="n">$100</div><div class="n">$16.28</div><div class="n"><b>$116.28</b></div>
+          <div class="n">15</div><div class="n">$150</div><div class="n">$24.42</div><div class="n"><b>$174.42</b></div>
+          <div class="n">20</div><div class="n">$200</div><div class="n">$32.56</div><div class="n"><b>$232.56</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" id="s-flujo">
+      <div class="quad">
+        <div class="q q1"><h4>⬇ INGRESOS</h4><ul><li>Tarifas por viaje: fijo + variable por distancia/tiempo</li></ul></div>
+        <div class="q q2"><h4>⬇ COSTOS</h4><ul><li>Logística de choferes</li><li>Seguros de responsabilidad civil</li><li>Infraestructura tecnológica</li><li>Reclutamiento y capacitación</li></ul></div>
+        <div class="q q3"><h4>⬇ INVERSIONES</h4><ul><li>Desarrollo tecnológico</li><li>Marketing y alianzas</li><li>Scooters o “auto insignia”</li><li>Pólizas y validaciones legales</li></ul></div>
+        <div class="q q4"><h4>⬇ RIESGOS</h4><ul><li>Clasificación como taxi pirata</li><li>Competencia indirecta (Uber, taxis)</li><li>Invalidación de pólizas</li><li>Confianza del usuario</li></ul></div>
+      </div>
+    </div>
+
+    <div class="sec" id="s-gantt">
+      <div class="card">
+        <div class="gantt">
+          <div class="h" style="text-align:left">Actividad</div><div class="h">M1</div><div class="h">M2</div><div class="h">M3</div><div class="h">M4</div>
+          <div class="n">Análisis de mercado</div><div class="c x"></div><div class="c"></div><div class="c"></div><div class="c"></div>
+          <div class="n">Estructura legal</div><div class="c x"></div><div class="c"></div><div class="c x"></div><div class="c"></div>
+          <div class="n">Infra. de desarrollo</div><div class="c x"></div><div class="c"></div><div class="c"></div><div class="c"></div>
+          <div class="n">Diseño UI/UX (Figma)</div><div class="c"></div><div class="c y"></div><div class="c"></div><div class="c"></div>
+          <div class="n">Backend y BD</div><div class="c"></div><div class="c y"></div><div class="c y"></div><div class="c"></div>
+          <div class="n">Apps móviles y panel admin</div><div class="c"></div><div class="c y"></div><div class="c y"></div><div class="c"></div>
+          <div class="n">Pruebas QA</div><div class="c"></div><div class="c"></div><div class="c x"></div><div class="c"></div>
+          <div class="n">Infra. de despliegue</div><div class="c"></div><div class="c"></div><div class="c x"></div><div class="c"></div>
+          <div class="n">Piloto en Aguascalientes</div><div class="c"></div><div class="c"></div><div class="c x"></div><div class="c"></div>
+          <div class="n">Campaña de marketing</div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c y"></div>
+          <div class="n">Lanzamiento oficial</div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c y"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" id="s-mvv">
+      <div class="card"><h3>🎯 Misión</h3><p>Proveer un servicio de chofer designado seguro, confiable y accesible a través de una plataforma tecnológica eficiente, salvaguardando a los usuarios y sus vehículos y fomentando la responsabilidad vial.</p></div>
+      <div class="card"><h3>🔭 Visión</h3><p>Ser la aplicación líder en movilidad y conductor designado en la región, reconocida por su atención, la confianza de la comunidad y su compromiso con la seguridad vial.</p></div>
+      <div class="card"><h3>💎 Valores</h3>
+        <div class="val"><div class="ic">🛡️</div><div><b>Seguridad</b><p>Máxima prioridad: personas, autos y comunidad.</p></div></div>
+        <div class="val"><div class="ic">🤝</div><div><b>Responsabilidad</b><p>Consumo responsable de alcohol y prevención vial.</p></div></div>
+        <div class="val"><div class="ic">🔍</div><div><b>Confianza y transparencia</b><p>Tarifas claras y servicio honesto.</p></div></div>
+        <div class="val"><div class="ic">⏱️</div><div><b>Puntualidad</b><p>Respuesta rápida cuando más se necesita.</p></div></div>
+        <div class="val"><div class="ic">💚</div><div><b>Empatía</b><p>Trato humano, amable y sin juicios.</p></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav id="nav">
+  <button class="on" data-t="viaje"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Viaje</button>
+  <button data-t="chofer"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v6.5M4 15.5l5.6-3M20 15.5l-5.6-3"/></svg>Chofer</button>
+  <button data-t="proyecto"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Proyecto</button>
+</nav>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const money=n=>"$"+n.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
+const calc=km=>{const price=km*10/0.86, drv=km*10; return {price, drv, fee:price-drv};};
+let toastT;
+function toast(msg,ms=3200){const t=$("#toast");t.textContent=msg;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),ms);}
+
+/* ---------- Splash + manifest ---------- */
+setTimeout(()=>$("#splash").classList.add("hide"),1500);
+try{
+  const icon="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='#00e5a0'/><text x='50' y='68' font-size='56' text-anchor='middle' font-family='Arial' font-weight='900' fill='#0b0f1a'>u</text></svg>");
+  const man={name:"uDriver",short_name:"uDriver",display:"fullscreen",display_override:["fullscreen","standalone"],orientation:"portrait",background_color:"#0b0f1a",theme_color:"#0b0f1a",start_url:location.href.split("#")[0],icons:[{src:icon,sizes:"any",type:"image/svg+xml",purpose:"any"}]};
+  const l=document.createElement("link");l.rel="manifest";l.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:"application/manifest+json"}));document.head.appendChild(l);
+}catch(e){}
+
+/* ---------- Fullscreen ---------- */
+const isStandalone=()=>matchMedia("(display-mode: fullscreen)").matches||matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+const fsBtn=$("#fsBtn");
+function toggleFS(){
+  const d=document, el=d.documentElement;
+  const req=el.requestFullscreen||el.webkitRequestFullscreen;
+  const exit=d.exitFullscreen||d.webkitExitFullscreen;
+  if(isStandalone()){toast("Ya estás en modo app ✅");return;}
+  if(!req){toast("En iPhone: Compartir → “Añadir a pantalla de inicio” y ábrela desde el ícono",6000);return;}
+  if(d.fullscreenElement||d.webkitFullscreenElement){exit.call(d);}
+  else{Promise.resolve(req.call(el,{navigationUI:"hide"})).then(()=>{try{screen.orientation.lock("portrait").catch(()=>{})}catch(e){}}).catch(()=>toast("Tu navegador bloqueó la pantalla completa. Prueba “Añadir a pantalla de inicio”.",5000));}
+}
+fsBtn.addEventListener("click",toggleFS);
+if(!isStandalone()) setTimeout(()=>toast("Toca ⛶ arriba para pantalla completa y ocultar la barra de URL",5000),2600);
+
+/* ---------- Tabs ---------- */
+function goTab(t){
+  $$("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  $$(".tab").forEach(s=>s.classList.toggle("on",s.id==="t-"+t));
+  if(t==="proyecto") animBars();
+}
+$("#nav").addEventListener("click",e=>{const b=e.target.closest("button");if(b)goTab(b.dataset.t);});
+$("#sub").addEventListener("click",e=>{
+  const b=e.target.closest(".chip");if(!b)return;
+  $$("#sub .chip").forEach(c=>c.classList.toggle("on",c===b));
+  $$(".sec").forEach(s=>s.classList.toggle("on",s.id==="s-"+b.dataset.s));
+  animBars();
+});
+function animBars(){$$(".bar i[data-w]").forEach(i=>{i.style.width="0";requestAnimationFrame(()=>requestAnimationFrame(()=>i.style.width=i.dataset.w+"%"));});}
+
+/* ---------- Calculadora ---------- */
+const cKm=$("#cKm");
+function upCalc(){const km=+cKm.value,c=calc(km);
+  $("#cKmL").textContent=km+" km";$("#cPrice").textContent=money(c.price);$("#cDrv").textContent=money(c.drv);$("#cCom").textContent=money(c.fee);$("#cFee").textContent="App: "+money(c.fee);}
+cKm.addEventListener("input",upCalc);upCalc();
+
+/* ---------- Mapa / viaje ---------- */
+const pRoute=$("#pRoute"), pPick=$("#pPick"), car=$("#car"), pinB=$("#pinB"), sheet=$("#sheet");
+const places=[
+  {n:"Centro",km:6},{n:"Zona Norte",km:11},{n:"Av. Colosio",km:8},{n:"Feria de San Marcos",km:5},{n:"Fracc. Las Américas",km:14},{n:"Aeropuerto",km:28}
+];
+let st={place:places[0],km:places[0].km,raf:0,pin:"",rate:0};
+function place(path,t){const L=path.getTotalLength(),p=path.getPointAtLength(L*t);car.setAttribute("transform",`translate(${p.x},${p.y})`);}
+function animate(path,ms,tick,done,reverse){
+  cancelAnimationFrame(st.raf);const t0=performance.now();
+  (function f(now){let t=Math.min(1,(now-t0)/ms);place(path,reverse?1-t:t);tick&&tick(t);
+    if(t<1)st.raf=requestAnimationFrame(f);else done&&done();})(t0);
+}
+function show(html){sheet.innerHTML=html;sheet.style.animation="none";void sheet.offsetWidth;sheet.style.animation="";}
+
+function sIdle(){
+  car.setAttribute("opacity",0);pPick.setAttribute("opacity",0);pRoute.setAttribute("opacity",0);pinB.setAttribute("opacity",0);
+  const c=calc(st.km);
+  show(`<h2>¿A dónde va tu auto?</h2><p class="s">Un chofer verificado maneja tu coche, tú vas de pasajero.</p>
+  <div class="chips">${places.map((p,i)=>`<button class="chip ${p===st.place?"on":""}" data-i="${i}">${p.n}</button>`).join("")}</div>
+  <div class="row" style="justify-content:space-between"><span class="pill">📍 ${st.km} km</span><span class="pill w">Tarifa clara</span></div>
+  <input type="range" id="km" min="1" max="40" value="${st.km}">
+  <div class="price"><b id="pp">${money(c.price)}</b><span>MXN · total</span></div>
+  <div class="split"><div class="mini"><small>Para el chofer</small><b id="pd">${money(c.drv)}</b></div><div class="mini"><small>Servicio y seguro (14%)</small><b id="pf">${money(c.fee)}</b></div></div>
+  <button class="btn" id="go">Pedir chofer designado</button>`);
+  $("#bLabel").textContent=st.place.n;
+}
+sheet.addEventListener("click",e=>{
+  const ch=e.target.closest(".chip[data-i]");
+  if(ch){st.place=places[+ch.dataset.i];st.km=st.place.km;sIdle();return;}
+  const s=e.target.closest(".stars span");
+  if(s){st.rate=+s.dataset.v;$$(".stars span").forEach(x=>x.classList.toggle("on",+x.dataset.v<=st.rate));return;}
+  if(e.target.id==="go")sSearch();
+  if(e.target.id==="arrived")sRide();
+  if(e.target.id==="again"){toast(st.rate?"¡Gracias por calificar!":"¡Hasta la próxima!");sIdle();}
+  if(e.target.id==="cancel"){cancelAnimationFrame(st.raf);sIdle();}
+});
+sheet.addEventListener("input",e=>{
+  if(e.target.id==="km"){st.km=+e.target.value;const c=calc(st.km);
+    $("#pp").textContent=money(c.price);$("#pd").textContent=money(c.drv);$("#pf").textContent=money(c.fee);
+    sheet.querySelector(".pill").textContent="📍 "+st.km+" km";
+    $$(".chip[data-i]").forEach(x=>x.classList.remove("on"));}
+});
+
+function sSearch(){
+  show(`<h2 style="text-align:center">Buscando chofer cercano…</h2><div class="radar"><i></i><i></i><i></i><b></b></div>
+  <p class="s" style="text-align:center">Validando disponibilidad y verificación del conductor</p><button class="btn ghost" id="cancel">Cancelar</button>`);
+  setTimeout(()=>{if($(".radar"))sPickup();},2300);
+}
+function sPickup(){
+  st.pin=String(Math.floor(1000+Math.random()*9000));
+  pPick.setAttribute("opacity",1);car.setAttribute("opacity",1);
+  show(`<div class="driver"><div class="avatar">🧑‍✈️</div><div style="flex:1"><b>Carlos M.</b><small>⭐ 4.9 · 312 servicios · Verificado ✅</small></div><span class="pill">En camino</span></div>
+  <div class="bar"><i id="pb"></i></div><p class="s" id="eta">Llega en 4 min</p>
+  <button class="btn ghost" id="cancel">Cancelar</button>`);
+  animate(pPick,5000,t=>{$("#pb")&&($("#pb").style.width=(t*100)+"%");$("#eta")&&($("#eta").textContent="Llega en "+Math.max(1,Math.ceil(4*(1-t)))+" min");},sPin);
+}
+function sPin(){
+  car.setAttribute("opacity",1);place(pPick,1);
+  show(`<div class="driver"><div class="avatar">🧑‍✈️</div><div style="flex:1"><b>Carlos llegó</b><small>Confirma su identidad antes de entregar las llaves</small></div></div>
+  <p class="s" style="text-align:center">Código de seguridad: dáselo al chofer</p>
+  <div class="pin">${st.pin.split("").map(d=>`<i>${d}</i>`).join("")}</div>
+  <button class="btn" id="arrived">Entregar llaves e iniciar viaje</button>`);
+}
+function sRide(){
+  pPick.setAttribute("opacity",0);pRoute.setAttribute("opacity",1);pinB.setAttribute("opacity",1);
+  show(`<div class="row" style="justify-content:space-between;margin-bottom:6px"><h2>En viaje 🚗</h2><span class="pill" id="rk">${st.km} km</span></div>
+  <p class="s">Compartiendo ubicación en tiempo real con tus contactos</p>
+  <div class="bar"><i id="pb"></i></div>
+  <div class="split"><div class="mini"><small>Destino</small><b style="font-size:14px">${st.place.n}</b></div><div class="mini"><small>Tiempo restante</small><b id="rt">—</b></div></div>`);
+  const mins=Math.max(3,Math.round(st.km*1.6));
+  animate(pRoute,9000,t=>{$("#pb")&&($("#pb").style.width=(t*100)+"%");$("#rk")&&($("#rk").textContent=(st.km*(1-t)).toFixed(1)+" km");$("#rt")&&($("#rt").textContent=Math.ceil(mins*(1-t))+" min");},sDone);
+}
+function sDone(){
+  const c=calc(st.km);
+  show(`<h2 style="text-align:center">¡Llegaste a salvo! 🎉</h2><p class="s" style="text-align:center">Tu auto está estacionado y sin un rasguño.</p>
+  <div class="price" style="justify-content:center"><b>${money(c.price)}</b><span>MXN</span></div>
+  <div class="split"><div class="mini"><small>Chofer</small><b>${money(c.drv)}</b></div><div class="mini"><small>Servicio (14%)</small><b>${money(c.fee)}</b></div></div>
+  <div class="stars">${[1,2,3,4,5].map(v=>`<span data-v="${v}">⭐</span>`).join("")}</div>
+  <button class="btn" id="again">Listo</button>`);
+  st.rate=0;
+}
+sIdle();
+
+/* ---------- Chofer ---------- */
+let online=false, earn=0, rides=0, kms=0, reqT;
+const sw=$("#sw");
+function upK(){$("#kEarn").textContent=money(earn);$("#kRides").textContent=rides;$("#kKm").textContent=kms;}
+function newReq(){
+  if(!online)return;
+  const p=places[Math.floor(Math.random()*places.length)],km=Math.min(p.km,18);
+  $("#reqBox").innerHTML=`<div class="req"><div class="row" style="justify-content:space-between"><h3 style="margin:0">🔔 Nuevo servicio</h3><span class="pill w">${km} km</span></div>
+  <p style="margin:8px 0 12px">Recoger auto en zona de bares → <b>${p.n}</b><br>Ganancia: <b style="color:var(--acc)">${money(km*10)}</b></p>
+  <div class="grid2"><button class="btn ghost" data-r="no">Rechazar</button><button class="btn" data-r="ok" data-km="${km}">Aceptar</button></div></div>`;
+  if(navigator.vibrate)navigator.vibrate(120);
+}
+sw.addEventListener("click",()=>{
+  online=!online;sw.classList.toggle("on",online);
+  $("#onTitle").textContent=online?"Conectado":"Desconectado";
+  $("#onSub").textContent=online?"Buscando servicios cerca de ti…":"Actívate para recibir servicios";
+  clearTimeout(reqT);$("#reqBox").innerHTML="";
+  if(online)reqT=setTimeout(newReq,2200);
+});
+$("#reqBox").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-r]");if(!b)return;
+  $("#reqBox").innerHTML="";
+  if(b.dataset.r==="ok"){const km=+b.dataset.km;earn+=km*10;rides++;kms+=km;upK();toast("Servicio completado: +"+money(km*10));}
+  clearTimeout(reqT);reqT=setTimeout(newReq,3500);
+});
+upK();
+})();
+</script>
+</body>
+</html>
